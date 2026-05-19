@@ -1,0 +1,102 @@
+:root {
+  --text: #5f6472;
+  --text-h: #111827;
+  --bg: #f4f6fb;
+  --panel: rgba(255, 255, 255, 0.8);
+  --surface-muted: rgba(17, 24, 39, 0.03);
+  --border: rgba(17, 24, 39, 0.08);
+  --code-bg: rgba(17, 24, 39, 0.06);
+  --accent: #2563eb;
+  --accent-soft: rgba(37, 99, 235, 0.12);
+  --chip-bg: rgba(37, 99, 235, 0.08);
+  --shadow:
+    rgba(15, 23, 42, 0.08) 0 18px 50px -20px, rgba(15, 23, 42, 0.08) 0 8px 24px -18px;
+
+  --sans: Inter, 'Segoe UI', Roboto, sans-serif;
+  --heading: Inter, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  color-scheme: light;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
+
+#root {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top, rgba(37, 99, 235, 0.08), transparent 30%),
+    var(--bg);
+}
+
+h1,
+h2 {
+  font-family: var(--heading);
+  font-weight: 650;
+  color: var(--text-h);
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  margin: 0;
+  @media (max-width: 1024px) {
+    font-size: clamp(2.1rem, 8vw, 3.2rem);
+  }
+}
+h2 {
+  font-size: 1.35rem;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  margin: 0;
+  @media (max-width: 1024px) {
+    font-size: 1.15rem;
+  }
+}
+p {
+  margin: 0;
+}
+
+code,
+code {
+  font-family: var(--mono);
+  display: inline-flex;
+  border-radius: 8px;
+  color: var(--text-h);
+}
+
+code {
+  font-size: 15px;
+  line-height: 135%;
+  padding: 4px 8px;
+  background: var(--code-bg);
+}
+
+a {
+  color: inherit;
+}
