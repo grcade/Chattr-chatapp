@@ -1,0 +1,23 @@
+[
+  {
+    "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    "name": "Project Pulse",
+    "type": "group",
+    "created_at": "2026-05-19T10:25:00.000Z",
+    "updated_at": "2026-05-19T10:25:00.000Z"
+  },
+  {
+    "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    "name": null,
+    "type": "private",
+    "created_at": "2026-05-19T10:30:00.000Z",
+    "updated_at": "2026-05-19T10:30:00.000Z"
+  },
+  {
+    "id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+    "name": "Launch Planning",
+    "type": "group",
+    "created_at": "2026-05-19T10:40:00.000Z",
+    "updated_at": "2026-05-19T10:40:00.000Z"
+  }
+]
