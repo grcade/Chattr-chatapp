@@ -4,7 +4,8 @@
   "private": false,
   "workspaces": [
     "app/frontend",
-    "app/backend"
+    "app/backend",
+    "app/shared"
   ],
   "description": "",
   "homepage": "https://github.com/grcade/Chattr-chatapp#readme",

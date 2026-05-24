@@ -5,8 +5,14 @@ import {
   recieveJoinRequest,
   setInboxRequestStatus,
   type ChatJoinRequest,
+  type ChatJoinResponse,
 } from '../store/features/chatRequestsSlice';
-import { emitChatRequest, listenForChatRequests } from '../socket/chat.socket';
+import {
+  emitChatRequest,
+  listenForChatRequests,
+  emitChatResponse,
+  listenForChatResponses,
+} from '../socket/chat.socket';
 
 export const useChatRequests = () => {
   const dispatch = useAppDispatch();
@@ -39,17 +45,32 @@ export const useChatRequests = () => {
   }, [dispatch]);
 
   const acceptRequest = useCallback(
-    (id: string) => {
-      dispatch(setInboxRequestStatus({ id, status: 'accepted' }));
+    (request: ChatJoinRequest) => {
+      emitChatResponse(request, 'accepted');
+      dispatch(setInboxRequestStatus({ id: request.id, status: 'accepted' }));
     },
     [dispatch]
   );
 
+  const watchingforResponses = useCallback(() => {
+    return listenForChatResponses((res: ChatJoinResponse) => {
+      console.log('---this is the response----', res);
+      dispatch(
+        setInboxRequestStatus({
+          id: res.id,
+          status: res.status,
+          privateChatId: res.privateChatId,
+        })
+      );
+    });
+  }, [dispatch]);
+
   const rejectRequest = useCallback(
-    (id: string) => {
-      dispatch(setInboxRequestStatus({ id, status: 'rejected' }));
+    (request: ChatJoinRequest) => {
+      emitChatResponse(request, 'rejected');
+      dispatch(setInboxRequestStatus({ id: request.id, status: 'rejected' }));
     },
-    [dispatch, inbox]
+    [dispatch]
   );
 
   return {
@@ -59,6 +80,7 @@ export const useChatRequests = () => {
     recieveRequest,
     acceptRequest,
     rejectRequest,
+    watchingforResponses,
   } as const;
 };
 

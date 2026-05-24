@@ -1,21 +1,51 @@
 import registerChatHandlers from './chat.handler';
 import { Server, Socket } from 'socket.io';
+import {
+  upsertUserService,
+  updateUserStatusService,
+} from '../../services/user.service';
 
 export const onlineUsers = new Map<string, string>();
 
 const registerConnectionHandler = (io: Server) => {
-  io.on('connection', (socket: Socket) => {
+  io.on('connection', async (socket: Socket) => {
     console.log('a user connected: ', socket.id);
 
     if (socket.handshake.auth.username) {
       onlineUsers.set(socket.handshake.auth.username, socket.id);
-      console.log(onlineUsers);
+      console.info(onlineUsers);
+
+      let user: any;
+      try {
+        user = await upsertUserService(socket.handshake.auth.username);
+
+        await updateUserStatusService(user.id, 'online');
+
+        console.log('User upserted and status updated: ', user);
+
+        socket.data.username = socket.handshake.auth.username;
+        socket.data.userId = user.id;
+      } catch (error) {
+        console.error('Error occurred while upserting user:', error);
+        socket.emit('error', {
+          message: 'Internal session initialization error',
+        });
+
+        socket.disconnect(true);
+      }
+    } else {
+      console.warn(
+        `Socket connected (${socket.id}) without a username payload. Rejecting.`
+      );
+      socket.disconnect(true);
+      return;
     }
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', async (reason) => {
       console.log('disconnect reason:', reason);
 
       if (socket.handshake.auth.username) {
         onlineUsers.delete(socket.handshake.auth.username);
+        await updateUserStatusService(socket.data.userId, 'offline');
         console.log(onlineUsers);
       }
     });

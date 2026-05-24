@@ -33,7 +33,24 @@ const conversationsSlice = createSlice({
       if (!username) return;
 
       const existing = state.list.find((c) => c.username === username);
-      if (existing) return;
+      if (existing) {
+        const nextId = action.payload.id?.trim();
+
+        if (nextId && existing.id !== nextId) {
+          const wasActive = state.activeConversationId === existing.id;
+          existing.id = nextId;
+
+          if (wasActive) {
+            state.activeConversationId = nextId;
+          }
+        }
+
+        if (typeof action.payload.joinedAt === 'number') {
+          existing.joinedAt = action.payload.joinedAt;
+        }
+
+        return;
+      }
 
       const conversation: ConversationItem = {
         id: action.payload.id ?? `${username}-${Date.now()}`,

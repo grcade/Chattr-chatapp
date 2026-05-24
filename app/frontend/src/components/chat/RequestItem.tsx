@@ -9,24 +9,23 @@ import {
   Avatar,
   Typography,
 } from '@mui/material';
+import type { ChipProps } from '@mui/material/Chip';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import useChatRequests from '../../hooks/useChatRequests';
+import type { ChatJoinRequest } from '../../store/features/chatRequestsSlice';
 
 interface RequestItemProps {
-  request: {
-    id: string;
-    from: string;
-    to: string;
-    status: 'pending' | 'accepted' | 'rejected';
-  };
+  request: ChatJoinRequest;
   type: 'inbox' | 'sent';
 }
 
 const RequestItem: React.FC<RequestItemProps> = ({ request, type }) => {
   const { acceptRequest, rejectRequest } = useChatRequests();
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (
+    status: ChatJoinRequest['status']
+  ): ChipProps['color'] => {
     switch (status) {
       case 'accepted':
         return 'success';
@@ -76,7 +75,7 @@ const RequestItem: React.FC<RequestItemProps> = ({ request, type }) => {
             <Chip
               label={request.status}
               size="small"
-              color={getStatusColor(request.status) as any}
+              color={getStatusColor(request.status)}
               variant="outlined"
               sx={{ height: 20, fontSize: '0.7rem', fontWeight: 600 }}
             />
@@ -102,7 +101,7 @@ const RequestItem: React.FC<RequestItemProps> = ({ request, type }) => {
                 backgroundColor: '#e8f5e9',
                 '&:hover': { backgroundColor: '#c8e6c9' },
               }}
-              onClick={() => acceptRequest(request.id)}
+              onClick={() => acceptRequest(request)}
             >
               <CheckIcon fontSize="small" />
             </IconButton>
@@ -115,7 +114,7 @@ const RequestItem: React.FC<RequestItemProps> = ({ request, type }) => {
                 backgroundColor: '#ffeebf1a',
                 '&:hover': { backgroundColor: '#ffcdd2' },
               }}
-              onClick={() => rejectRequest(request.id)}
+              onClick={() => rejectRequest(request)}
             >
               <CloseIcon fontSize="small" />
             </IconButton>

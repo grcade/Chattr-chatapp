@@ -10,7 +10,12 @@ export interface ChatJoinRequest {
   status: JoinRequestStatus;
   createdAt: number;
   updatedAt: number;
+  privateChatId?: string;
 }
+
+export type ChatJoinResponse = ChatJoinRequest & {
+  status: 'accepted' | 'rejected';
+};
 
 interface ChatRequestsState {
   sent: ChatJoinRequest[];
@@ -39,19 +44,30 @@ const chatRequestsSlice = createSlice({
       action: PayloadAction<{
         id: string;
         status: Exclude<JoinRequestStatus, 'pending'>;
+        privateChatId?: string;
       }>
     ) => {
       const now = Date.now();
 
       state.inbox = state.inbox.map((req) =>
         req.id === action.payload.id
-          ? { ...req, status: action.payload.status, updatedAt: now }
+          ? {
+              ...req,
+              status: action.payload.status,
+              privateChatId: action.payload.privateChatId ?? req.privateChatId,
+              updatedAt: now,
+            }
           : req
       );
 
       state.sent = state.sent.map((req) =>
         req.id === action.payload.id
-          ? { ...req, status: action.payload.status, updatedAt: now }
+          ? {
+              ...req,
+              status: action.payload.status,
+              privateChatId: action.payload.privateChatId ?? req.privateChatId,
+              updatedAt: now,
+            }
           : req
       );
     },

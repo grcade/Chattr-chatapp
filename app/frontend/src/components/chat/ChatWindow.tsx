@@ -3,7 +3,12 @@ import { Box, Typography, Paper, IconButton, InputBase } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import useUser from '../../hooks/useUser';
 import useConversations from '../../hooks/useConversations';
-import { socket } from '../../socket/socket';
+// import { socket } from '../../socket/socket';
+import {
+  emitChatMessage,
+  listenForChatMessages,
+} from '../../socket/chat.socket';
+import type { ChatMessageEvent } from '../../socket/chat.socket';
 
 type UiMessage = { id: string; username?: string | null; text: string };
 
@@ -17,15 +22,14 @@ const ChatWindow: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handler = (msg: any) => {
-      const payload = typeof msg === 'string' ? { text: msg } : msg;
-      const targetConversationId = activeConversation?.id;
+    const handler = (msg: ChatMessageEvent) => {
+      const targetConversationId = msg.conversationId;
       if (!targetConversationId) return;
 
       const incoming: UiMessage = {
         id: String(Date.now()),
-        username: payload.username ?? null,
-        text: payload.text ?? String(payload),
+        username: msg.from ?? null,
+        text: msg.content,
       };
 
       setMessagesByConversation((prev) => ({
@@ -37,11 +41,11 @@ const ChatWindow: React.FC = () => {
       }));
     };
 
-    socket.on('message', handler);
+    const cleanup = listenForChatMessages(handler);
     return () => {
-      socket.off('message', handler);
+      cleanup();
     };
-  }, [activeConversation]);
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -53,12 +57,11 @@ const ChatWindow: React.FC = () => {
     if (!activeConversation || !text.trim()) return;
 
     const payload = {
-      username: user.username,
-      to: activeConversation.username,
-      text: text.trim(),
+      conversationId: activeConversation.id,
+      content: text.trim(),
     };
 
-    socket.emit('message', payload);
+    emitChatMessage(payload);
 
     const outgoing: UiMessage = {
       id: String(Date.now()),
@@ -129,6 +132,7 @@ const ChatWindow: React.FC = () => {
       >
         <Box sx={{ flexGrow: 1 }} />
         {messages.map((msg) => {
+          console.log('---this is the message----', msg);
           const isMine = msg.username === user.username;
           return (
             <Box

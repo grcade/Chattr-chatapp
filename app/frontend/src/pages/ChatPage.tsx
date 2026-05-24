@@ -32,8 +32,8 @@ const ChatPage: React.FC = () => {
       // Determine the username of the other participant
       const otherUser = req.from === user.username ? req.to : req.from;
 
-      if (otherUser && otherUser !== user.username) {
-        addConversation(otherUser);
+      if (otherUser && otherUser !== user.username && req.privateChatId) {
+        addConversation(otherUser, req.privateChatId);
       }
     });
   }, [user.username, sent, inbox, addConversation]);
