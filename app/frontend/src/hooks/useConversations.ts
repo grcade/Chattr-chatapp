@@ -10,19 +10,64 @@ import {
   emitHistoryRequest,
   listenForHistoryResponse,
 } from '../socket/chat.socket';
+import fetchit from '../utils/fetchit';
 
 export const useConversations = () => {
   const dispatch = useAppDispatch();
   const conversations = useAppSelector((s) => s.conversations.list);
+  const user = useAppSelector((s) => s.user);
+  // console.log('User in useConversations hook: ', user.id, user.username);
   const activeConversationId = useAppSelector(
     (s) => s.conversations.activeConversationId
   );
 
-  useEffect(() => {
-    if (!activeConversationId) return;
-    console.log(
-      `UI Fetching history for conversation: ${activeConversationId}`
+  const fetchConversations = useCallback(async () => {
+    return await fetchit(
+      `${import.meta.env.VITE_API_BASE_URL}/conversations/${user.username}`
     );
+  }, [user.username]);
+
+  type ConversationElement = {
+    conversationId: string;
+    id: string;
+    name: string;
+    avatarUrl: string;
+  };
+
+  useEffect(() => {
+    ////// fetch conversations on mount
+    const loadConversations = async () => {
+      if (!user.username) return;
+
+      const conversationData = await fetchConversations();
+      console.log('Fetched conversations: ', conversationData);
+      conversationData?.data.forEach((conv: ConversationElement) => {
+
+        if (conv.name) {
+          dispatch(
+            upsertConversation({
+              username: conv.name,
+              id: conv.id,
+              conversationId: conv.conversationId,
+              avatarUrl: conv.avatarUrl,
+
+            })
+          );
+        } else {
+          console.warn(
+            'No username found in user state, skipping conversations fetch'
+          );
+        }
+      });
+    };
+
+    loadConversations();
+
+    ///////// Chat history management
+    if (!activeConversationId) return;
+    // console.log(
+    //   `UI Fetching history for conversation: ${activeConversationId}`
+    // );
     emitHistoryRequest(activeConversationId);
 
     const handleHistoryResponse = (data: {
@@ -39,15 +84,28 @@ export const useConversations = () => {
     const cleanup = listenForHistoryResponse(handleHistoryResponse);
 
     return () => {
-      console.log(
-        `[Cleanup] Leaving listener for room: ${activeConversationId}`
-      );
+      // console.log(
+      //   `[Cleanup] Leaving listener for room: ${activeConversationId}`
+      // );
       cleanup();
     };
-  }, [activeConversationId, dispatch]);
+  }, [activeConversationId, dispatch, fetchConversations]);
 
+  //////// Conversation management
+
+  // activeConversation is derived from the conversations list and the activeConversationId. automaticaly recalculaes when either changes, ensuring it always reflects the current active conversation details.
   const activeConversation = useMemo(
-    () => conversations.find((c) => c.id === activeConversationId) ?? null,
+    () =>
+      conversations.find((c) => {
+        console.log(c);
+        console.log(
+          'Comparing conversation id: ',
+          c.id,
+          ' with activeConversationId: ',
+          activeConversationId
+        );
+        return c.id === activeConversationId;
+      }) ?? null,
     [conversations, activeConversationId]
   );
 

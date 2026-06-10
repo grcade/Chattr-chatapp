@@ -5,6 +5,7 @@ import {
   pgEnum,
   type AnyPgColumn,
   index,
+  boolean,
 } from 'drizzle-orm/pg-core';
 import { timestamps } from '../../utils/timestamps';
 import { users } from './user.schema';
@@ -15,21 +16,13 @@ export const conversation_type_enum = pgEnum('conversation_type', [
   'group',
 ]);
 
-export const conversations = pgTable(
-  'conversations',
-  {
-    id: uuid('id').primaryKey().notNull(),
-    name: varchar('name', { length: 255 }).notNull(),
-    type: conversation_type_enum('type').default('private').notNull(),
-    last_message_id: uuid('last_message_id').references(
-      (): AnyPgColumn => chats.id,
-      { onDelete: 'set null' }
-    ),
-    ...timestamps,
-  },
-  (table) => {
-    return {
-      nameIndex: index('name_index').on(table.name),
-    };
-  }
-);
+export const conversations = pgTable('conversations', {
+  id: uuid('id').primaryKey().notNull(),
+  is_active: boolean('is_active').default(false).notNull(),
+  type: conversation_type_enum('type').default('private').notNull(),
+  last_message_id: uuid('last_message_id').references(
+    (): AnyPgColumn => chats.id,
+    { onDelete: 'set null' }
+  ),
+  ...timestamps,
+});

@@ -3,6 +3,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import { setupSocket } from './socket/index.js';
 import app from './app.js';
+import cors from 'cors';
 
 const server = http.createServer(app);
 
@@ -16,5 +17,5 @@ const io = new Server(server, {
 setupSocket(io);
 
 server.listen(env.PORT, () => {
-  console.log(`Server is running on port ${env.PORT}`);
+  // console.log(`Server is running on port ${env.PORT}`);
 });

@@ -132,7 +132,7 @@ const ChatWindow: React.FC = () => {
       >
         <Box sx={{ flexGrow: 1 }} />
         {messages.map((msg) => {
-          console.log('---this is the message----', msg);
+          // console.log('---this is the message----', msg);
           const isMine = msg.username === user.username;
           return (
             <Box

@@ -54,7 +54,7 @@ export const useChatRequests = () => {
 
   const watchingforResponses = useCallback(() => {
     return listenForChatResponses((res: ChatJoinResponse) => {
-      console.log('---this is the response----', res);
+      // console.log('---this is the response----', res);
       dispatch(
         setInboxRequestStatus({
           id: res.id,

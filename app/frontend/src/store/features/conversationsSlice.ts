@@ -2,9 +2,12 @@ import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
 export interface ConversationItem {
+ conversationId: string;
   id: string;
   username: string;
+  userId?: string;
   joinedAt: number;
+  avatarUrl?: string | null;
 }
 
 interface ConversationsState {
@@ -26,7 +29,9 @@ const conversationsSlice = createSlice({
       action: PayloadAction<{
         username: string;
         id?: string;
+        conversationId?: string;
         joinedAt?: number;
+        avatarUrl?: string | null;
       }>
     ) => {
       const username = action.payload.username.trim();
@@ -53,9 +58,11 @@ const conversationsSlice = createSlice({
       }
 
       const conversation: ConversationItem = {
+        conversationId: action.payload.id ?? `${username}-${Date.now()}`,
         id: action.payload.id ?? `${username}-${Date.now()}`,
         username,
         joinedAt: action.payload.joinedAt ?? Date.now(),
+        avatarUrl: action.payload.avatarUrl,
       };
 
       state.list.unshift(conversation);

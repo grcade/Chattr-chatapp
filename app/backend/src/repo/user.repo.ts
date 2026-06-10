@@ -6,15 +6,20 @@ import type { user_status } from '@app/shared/types/user.types';
 
 export const search_users = (keyword: string) => {
   return db
-    .select()
+    .select({
+      id: users.id,
+      username: users.username,
+      status: users.status,
+      avartar_url: users.avatarUrl,
+    })
     .from(users)
     .where(ilike(users.username, `${keyword}%`));
 };
 
 export const upsert_user = (username: string) => {
   const uuid: string = crypto.randomUUID();
-  console.log('Upserting user with username: ', username);
-  console.log('Generated UUID: ', uuid);
+  // console.log('Upserting user with username: ', username);
+  // console.log('Generated UUID: ', uuid);
 
   return db
     .insert(users)

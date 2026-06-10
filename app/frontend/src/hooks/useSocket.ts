@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useAppSelector } from './storeHooks';
 import { socket } from '../socket/socket';
-import { connectSocket } from '../socket/chat.socket';
+import { connectSocket , listenForChatErrors} from '../socket/chat.socket';
 import useChatRequests from './useChatRequests';
 
 const useSocket = () => {
@@ -25,11 +25,16 @@ const useSocket = () => {
       const cleanupRecieveRequest = recieveRequest();
       const cleanupRecieveResponse = watchingforResponses();
 
+      const cleanupChatErrors = listenForChatErrors((error) => {
+        console.error('Chat error:', error);
+      });
+
       return () => {
         socket.off('connect');
         socket.off('disconnect');
         cleanupRecieveRequest();
         cleanupRecieveResponse();
+        cleanupChatErrors();
       };
     } catch (error) {
       console.error('Error occurred while setting up socket:', error);

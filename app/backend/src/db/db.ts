@@ -14,7 +14,7 @@ try {
   const runQuery = async () => {
     try {
       const res = await pool.query('SELECT NOW()');
-      console.log('Database Connected at:', res.rows[0].now);
+      // console.log('Database Connected at:', res.rows[0].now);
     } catch (err: any) {
       console.error('Connection error', err.stack);
     } finally {
