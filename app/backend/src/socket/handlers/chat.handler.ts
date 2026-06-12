@@ -56,6 +56,7 @@ const registerChatHandlers = (io: Server, socket: Socket) => {
       }
       await addUserToConversationService(conversation.id, socket.data.userId); // Add the requester to the conversation
       req.conversationId = conversation.id; // Attach the conversation ID to the request object
+      req.privateChatId = conversation.id;
 
       io.to(recipientSocket).emit('chat:request', req);
       // console.log('Forwarded request to recipient: ', req.to);
@@ -108,6 +109,7 @@ const registerChatHandlers = (io: Server, socket: Socket) => {
       await addUserToConversationService(conversationId, socket.data.userId);
       await toggleConversationActiveStatusService(conversationId, true);
 
+      res.conversationId = conversationId;
       res.privateChatId = conversationId;
       res.id = requestId;
 
@@ -130,6 +132,20 @@ const registerChatHandlers = (io: Server, socket: Socket) => {
 
     io.to(requesterSocket).emit('chat:response', res);
     socket.emit('chat:response', res);
+  });
+
+  socket.on('chat:join', async (data: { conversationId: string }) => {
+    const { conversationId } = data;
+    if (!conversationId) return;
+
+    if (!isValidUUID(conversationId)) {
+      socket.emit('chat:error', {
+        message: 'Invalid conversation ID format.',
+      });
+      return;
+    }
+
+    socket.join(conversationId);
   });
 
   socket.on(
@@ -192,7 +208,7 @@ const registerChatHandlers = (io: Server, socket: Socket) => {
     }
   );
 
-  socket.on('chat:history', async (data) => {
+  socket.on('chat:history-request', async (data) => {
     const { conversationId } = data;
     if (!conversationId) {
       socket.emit('chat:error', {
@@ -201,7 +217,7 @@ const registerChatHandlers = (io: Server, socket: Socket) => {
       return;
     }
     const chats = await getChatsByConversationIdService(conversationId);
-    socket.emit('chat:history', { conversationId, chats });
+    socket.emit('chat:history-response', { conversationId, chats });
   });
 };
 

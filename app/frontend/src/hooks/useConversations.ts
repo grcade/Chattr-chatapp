@@ -7,16 +7,19 @@ import {
 import { setChats } from '../store/features/chatsSlice';
 
 import {
+  emitJoinConversation,
   emitHistoryRequest,
   listenForHistoryResponse,
 } from '../socket/chat.socket';
 import fetchit from '../utils/fetchit';
 
+let conversationsSyncOwner = false;
+let conversationsLoaded = false;
+
 export const useConversations = () => {
   const dispatch = useAppDispatch();
   const conversations = useAppSelector((s) => s.conversations.list);
   const user = useAppSelector((s) => s.user);
-  // console.log('User in useConversations hook: ', user.id, user.username);
   const activeConversationId = useAppSelector(
     (s) => s.conversations.activeConversationId
   );
@@ -35,14 +38,17 @@ export const useConversations = () => {
   };
 
   useEffect(() => {
+    if (conversationsSyncOwner) return;
+    conversationsSyncOwner = true;
+
     ////// fetch conversations on mount
     const loadConversations = async () => {
-      if (!user.username) return;
+      if (!user.username || conversationsLoaded) return;
+
+      conversationsLoaded = true;
 
       const conversationData = await fetchConversations();
-      console.log('Fetched conversations: ', conversationData);
       conversationData?.data.forEach((conv: ConversationElement) => {
-
         if (conv.name) {
           dispatch(
             upsertConversation({
@@ -50,7 +56,6 @@ export const useConversations = () => {
               id: conv.id,
               conversationId: conv.conversationId,
               avatarUrl: conv.avatarUrl,
-
             })
           );
         } else {
@@ -64,17 +69,19 @@ export const useConversations = () => {
     loadConversations();
 
     ///////// Chat history management
-    if (!activeConversationId) return;
-    // console.log(
-    //   `UI Fetching history for conversation: ${activeConversationId}`
-    // );
+    if (!activeConversationId) {
+      return () => {
+        conversationsSyncOwner = false;
+      };
+    }
+    emitJoinConversation(activeConversationId);
     emitHistoryRequest(activeConversationId);
 
     const handleHistoryResponse = (data: {
       conversationId: string;
       chats: unknown[];
     }) => {
-      if (data.conversationId !== activeConversationId) {
+      if (data.conversationId === activeConversationId) {
         dispatch(
           setChats({ conversationId: data.conversationId, chats: data.chats })
         );
@@ -84,34 +91,24 @@ export const useConversations = () => {
     const cleanup = listenForHistoryResponse(handleHistoryResponse);
 
     return () => {
-      // console.log(
-      //   `[Cleanup] Leaving listener for room: ${activeConversationId}`
-      // );
       cleanup();
+      conversationsSyncOwner = false;
     };
-  }, [activeConversationId, dispatch, fetchConversations]);
+  }, [activeConversationId, dispatch, fetchConversations, user.username]);
 
   //////// Conversation management
 
   // activeConversation is derived from the conversations list and the activeConversationId. automaticaly recalculaes when either changes, ensuring it always reflects the current active conversation details.
   const activeConversation = useMemo(
     () =>
-      conversations.find((c) => {
-        console.log(c);
-        console.log(
-          'Comparing conversation id: ',
-          c.id,
-          ' with activeConversationId: ',
-          activeConversationId
-        );
-        return c.id === activeConversationId;
-      }) ?? null,
+      conversations.find((c) => c.conversationId === activeConversationId) ??
+      null,
     [conversations, activeConversationId]
   );
 
   const addConversation = useCallback(
     (username: string, privateChatId: string | undefined) => {
-      dispatch(upsertConversation({ username, id: privateChatId }));
+      dispatch(upsertConversation({ username, conversationId: privateChatId }));
       if (privateChatId) {
         dispatch(setActiveConversation(privateChatId));
       }

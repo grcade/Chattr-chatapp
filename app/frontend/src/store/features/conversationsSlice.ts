@@ -39,11 +39,11 @@ const conversationsSlice = createSlice({
 
       const existing = state.list.find((c) => c.username === username);
       if (existing) {
-        const nextId = action.payload.id?.trim();
+        const nextId = action.payload.conversationId?.trim();
 
-        if (nextId && existing.id !== nextId) {
-          const wasActive = state.activeConversationId === existing.id;
-          existing.id = nextId;
+        if (nextId && existing.conversationId !== nextId) {
+          const wasActive = state.activeConversationId === existing.conversationId;
+          existing.conversationId = nextId;
 
           if (wasActive) {
             state.activeConversationId = nextId;
@@ -58,7 +58,7 @@ const conversationsSlice = createSlice({
       }
 
       const conversation: ConversationItem = {
-        conversationId: action.payload.id ?? `${username}-${Date.now()}`,
+        conversationId: action.payload.conversationId ?? `${username}-${Date.now()}`,
         id: action.payload.id ?? `${username}-${Date.now()}`,
         username,
         joinedAt: action.payload.joinedAt ?? Date.now(),
@@ -67,7 +67,7 @@ const conversationsSlice = createSlice({
 
       state.list.unshift(conversation);
       if (!state.activeConversationId) {
-        state.activeConversationId = conversation.id;
+        state.activeConversationId = conversation.conversationId;
       }
     },
 

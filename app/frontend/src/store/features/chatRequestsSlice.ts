@@ -10,6 +10,7 @@ export interface ChatJoinRequest {
   status: JoinRequestStatus;
   createdAt: number;
   updatedAt: number;
+  conversationId?: string;
   privateChatId?: string;
 }
 
@@ -44,16 +45,20 @@ const chatRequestsSlice = createSlice({
       action: PayloadAction<{
         id: string;
         status: Exclude<JoinRequestStatus, 'pending'>;
+        conversationId?: string;
         privateChatId?: string;
       }>
     ) => {
       const now = Date.now();
+      const conversationId =
+        action.payload.conversationId ?? action.payload.privateChatId;
 
       state.inbox = state.inbox.map((req) =>
         req.id === action.payload.id
           ? {
               ...req,
               status: action.payload.status,
+              conversationId: conversationId ?? req.conversationId,
               privateChatId: action.payload.privateChatId ?? req.privateChatId,
               updatedAt: now,
             }
@@ -65,6 +70,7 @@ const chatRequestsSlice = createSlice({
           ? {
               ...req,
               status: action.payload.status,
+              conversationId: conversationId ?? req.conversationId,
               privateChatId: action.payload.privateChatId ?? req.privateChatId,
               updatedAt: now,
             }

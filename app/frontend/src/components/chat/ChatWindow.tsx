@@ -23,6 +23,7 @@ const ChatWindow: React.FC = () => {
 
   useEffect(() => {
     const handler = (msg: ChatMessageEvent) => {
+      console.log('Received chat message event: ', msg);``
       const targetConversationId = msg.conversationId;
       if (!targetConversationId) return;
 
@@ -57,7 +58,7 @@ const ChatWindow: React.FC = () => {
     if (!activeConversation || !text.trim()) return;
 
     const payload = {
-      conversationId: activeConversation.id,
+      conversationId: activeConversation.conversationId,
       content: text.trim(),
     };
 
@@ -71,8 +72,8 @@ const ChatWindow: React.FC = () => {
 
     setMessagesByConversation((prev) => ({
       ...prev,
-      [activeConversation.id]: [
-        ...(prev[activeConversation.id] ?? []),
+      [activeConversation.conversationId]: [
+        ...(prev[activeConversation.conversationId] ?? []),
         outgoing,
       ],
     }));
@@ -107,7 +108,8 @@ const ChatWindow: React.FC = () => {
     );
   }
 
-  const messages = messagesByConversation[activeConversation.id] ?? [];
+  const messages =
+    messagesByConversation[activeConversation.conversationId] ?? [];
 
   return (
     <Box

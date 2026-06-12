@@ -59,6 +59,7 @@ export const useChatRequests = () => {
         setInboxRequestStatus({
           id: res.id,
           status: res.status,
+          conversationId: res.conversationId ?? res.privateChatId,
           privateChatId: res.privateChatId,
         })
       );

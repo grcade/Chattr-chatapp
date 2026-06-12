@@ -131,10 +131,12 @@ const Sidebar: React.FC = () => {
               </Box>
             ) : (
               conversations.map((conv) => (
-                <ListItem key={conv.id} disablePadding>
+                <ListItem key={conv.conversationId} disablePadding>
                   <ListItemButton
-                    selected={activeConversation?.id === conv.id}
-                    onClick={() => selectConversation(conv.id)}
+                    selected={
+                      activeConversation?.conversationId === conv.conversationId
+                    }
+                    onClick={() => selectConversation(conv.conversationId)}
                     sx={{
                       py: 1.5,
                       px: 2,
@@ -154,11 +156,13 @@ const Sidebar: React.FC = () => {
                       sx={{
                         mr: 2,
                         bgcolor:
-                          activeConversation?.id === conv.id
+                          activeConversation?.conversationId ===
+                          conv.conversationId
                             ? '#ffffff'
                             : '#0088cc1a',
                         color:
-                          activeConversation?.id === conv.id
+                          activeConversation?.conversationId ===
+                          conv.conversationId
                             ? 'primary.main'
                             : 'primary.main',
                         width: 48,
@@ -177,7 +181,8 @@ const Sidebar: React.FC = () => {
                             fontWeight: 600,
                             fontSize: '1rem',
                             color:
-                              activeConversation?.id === conv.id
+                              activeConversation?.conversationId ===
+                              conv.conversationId
                                 ? '#ffffff'
                                 : 'text.primary',
                           }}
@@ -191,7 +196,8 @@ const Sidebar: React.FC = () => {
                           sx={{
                             fontSize: '0.8rem',
                             color:
-                              activeConversation?.id === conv.id
+                              activeConversation?.conversationId ===
+                              conv.conversationId
                                 ? '#ffffffb3'
                                 : 'text.secondary',
                           }}

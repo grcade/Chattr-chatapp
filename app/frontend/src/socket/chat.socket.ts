@@ -39,6 +39,10 @@ export const emitChatRequest = (data: ChatJoinRequest) => {
   // console.log('Emitted chat request to: ', data.to);
 };
 
+export const emitJoinConversation = (conversationId: string) => {
+  socket.emit('chat:join', { conversationId });
+};
+
 export const listenForChatRequests = (
   callback: (req: ChatJoinRequest) => void
 ) => {
