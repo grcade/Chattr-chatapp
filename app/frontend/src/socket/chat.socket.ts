@@ -77,7 +77,7 @@ export const emitHistoryRequest = (conversationId: string) => {
 };
 
 export const listenForHistoryResponse = (
-  callback: (data: { conversationId: string; chats: unknown[] }) => void
+  callback: (data: { conversationId: string; username: string; chats: unknown[] }) => void
 ) => {
   socket.on('chat:history-response', callback);
   return () => {

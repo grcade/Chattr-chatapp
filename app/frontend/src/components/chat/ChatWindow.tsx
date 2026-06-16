@@ -1,18 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Box, Typography, Paper, IconButton, InputBase } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import useUser from '../../hooks/useUser';
 import useConversations from '../../hooks/useConversations';
+import type { Chat } from '@app/shared/types/user.types';
 // import { socket } from '../../socket/socket';
 import {
   emitChatMessage,
   listenForChatMessages,
 } from '../../socket/chat.socket';
 import type { ChatMessageEvent } from '../../socket/chat.socket';
+import { useAppSelector } from '../../hooks/storeHooks';
+// import { setChats } from '../../store/features/chatsSlice';
 
-type UiMessage = { id: string; username?: string | null; text: string };
+type UiMessage = {
+  id: string;
+  username?: string | null;
+  text: string;
+  conversationId?: string;
+};
 
 const ChatWindow: React.FC = () => {
+  const chats: {
+    conversationId: string | null;
+    chats: Chat[] | unknown[];
+    username: string | null;
+  } = useAppSelector((s) => s.chats);
   const { user } = useUser();
   const { activeConversation } = useConversations();
   const [messagesByConversation, setMessagesByConversation] = useState<
@@ -21,9 +34,21 @@ const ChatWindow: React.FC = () => {
   const [text, setText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const activeHistoryMessages: UiMessage[] = useMemo(() => {
+    if (!activeConversation || !chats.conversationId) return [];
+
+    // Filter or map directly from your primary data source
+    return (chats.chats as Chat[]).map((chat) => ({
+      conversationId: chat.conversation_id,
+      id: chat.id,
+      username: chat.sender_username,
+      text: chat.message,
+    }));
+  }, [activeConversation, chats.chats]);
+
   useEffect(() => {
     const handler = (msg: ChatMessageEvent) => {
-      console.log('Received chat message event: ', msg);``
+      console.log('Received chat message event: ', msg);
       const targetConversationId = msg.conversationId;
       if (!targetConversationId) return;
 
@@ -108,9 +133,12 @@ const ChatWindow: React.FC = () => {
     );
   }
 
-  const messages =
-    messagesByConversation[activeConversation.conversationId] ?? [];
-
+  const messages = [
+    ...activeHistoryMessages,
+    ...(messagesByConversation[activeConversation.conversationId] ?? []),
+  ];
+  console.log(messagesByConversation, '---messages by conversation---');
+  console.log(messages, '---messages for active conversation---');
   return (
     <Box
       sx={{

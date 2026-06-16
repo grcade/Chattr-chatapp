@@ -140,6 +140,8 @@ const registerChatHandlers = (io: Server, socket: Socket) => {
 
     if (!isValidUUID(conversationId)) {
       socket.emit('chat:error', {
+        conversationId,
+        username: socket.data.username,
         message: 'Invalid conversation ID format.',
       });
       return;
@@ -181,7 +183,7 @@ const registerChatHandlers = (io: Server, socket: Socket) => {
       console.log('user id----------->', socket.data.userId);
       const chatResult = await createChatService(
         content,
-        socket.data.userId,
+        socket.data.username,
         conversationId,
         image_url
       );
@@ -216,8 +218,13 @@ const registerChatHandlers = (io: Server, socket: Socket) => {
       });
       return;
     }
+
     const chats = await getChatsByConversationIdService(conversationId);
-    socket.emit('chat:history-response', { conversationId, chats });
+    console.log('chats----------->', chats);
+    socket.emit('chat:history-response', {
+      conversationId,
+      chats: chats ?? [],
+    });
   });
 };
 

@@ -23,10 +23,10 @@ export interface Chat {
   id: string;
   message: string;
   created_at: Date;
-  sender_id: string;
+  sender_username: string;
   conversation_id: string;
   image_url?: string | null;
-  status: 'sent' | 'delivered' | 'read';
+  status: message_status;
   is_deleted: boolean;
   attachment_url?: string | null;
 }

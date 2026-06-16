@@ -45,7 +45,13 @@ const registerConnectionHandler = (io: Server) => {
 
       if (socket.handshake.auth.username) {
         onlineUsers.delete(socket.handshake.auth.username);
-        await updateUserStatusService(socket.data.userId, 'offline');
+try {
+      await updateUserStatusService(socket.data.userId, 'offline');
+    } catch (error) {
+      console.error(`Failed to set user ${socket.data.userId} offline on disconnect:`, error);
+      // We don't need to disconnect them because they are already disconnecting!
+      // We just catch it so the server stays alive.
+    }
         // console.log(onlineUsers);
       }
     });

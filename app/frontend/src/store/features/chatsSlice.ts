@@ -1,7 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const initialState = {
-  user: null,
+const initialState: {
+  conversationId: string | null;
+  username: string | null;
+  chats: unknown[];
+} = {
+  conversationId: null,
+  username: null,
   chats: [],
 };
 
@@ -10,12 +15,14 @@ const chatsSlice = createSlice({
   initialState,
   reducers: {
     setChats: (state, action) => {
-      state.user = action.payload.user;
+      state.conversationId = action.payload.conversationId;
       state.chats = action.payload.chats;
+      state.username = action.payload.username;
     },
     clearChats: (state) => {
-      state.user = null;
+      state.conversationId = null;
       state.chats = [];
+      state.username = null;
     },
   },
 });

@@ -21,9 +21,9 @@ export const chats = pgTable('chats', {
   id: uuid('id').primaryKey().notNull(),
   message: text('message').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
-  sender_id: uuid('sender_id')
+  sender_username: text('sender_username')
     .notNull()
-    .references(() => users.id, {
+    .references(() => users.username, {
       onDelete: 'cascade',
     }),
   conversation_id: uuid('conversation_id')

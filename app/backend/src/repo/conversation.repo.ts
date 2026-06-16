@@ -6,7 +6,7 @@ import {
   users,
 } from '../db/schema/index.js';
 import type { conversation_type } from '@app/shared/types/user.types';
-import type { ZodUUID } from 'zod/v4';
+
 
 export const create_conversation = (id: string, type: conversation_type) => {
   return db

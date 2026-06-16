@@ -30,14 +30,14 @@ import {
 
 export const createChatService = (
   message: string,
-  creatorId: string,
+  creatorUsername: string,
   conversationId: string,
   imageUrl: string | null
 ) => {
   message = message.trim().toLowerCase();
   imageUrl = imageUrl ? imageUrl.trim() : null;
 
-  return create_chat(message, creatorId, conversationId, imageUrl);
+  return create_chat(message, creatorUsername, conversationId, imageUrl);
 };
 
 export const getChatsByConversationIdService = (conversationId: string) => {

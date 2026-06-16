@@ -80,10 +80,15 @@ export const useConversations = () => {
     const handleHistoryResponse = (data: {
       conversationId: string;
       chats: unknown[];
+      username: string;
     }) => {
       if (data.conversationId === activeConversationId) {
+        console.log('Received chat history for conversation: ', data);
         dispatch(
-          setChats({ conversationId: data.conversationId, chats: data.chats })
+          setChats({
+            conversationId: data.conversationId,
+            chats: data.chats ?? [],
+          })
         );
       }
     };

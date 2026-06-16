@@ -5,7 +5,7 @@ import crypto from 'crypto';
 
 export const create_chat = (
   message: string,
-  creatorId: string,
+  creatorUsername: string,
   conversationId: string,
   imageUrl: string | null
 ) => {
@@ -16,7 +16,7 @@ export const create_chat = (
     .values({
       id: uuid,
       message,
-      sender_id: creatorId,
+      sender_username: creatorUsername,
       conversation_id: conversationId,
       image_url: imageUrl,
     })
