@@ -20,6 +20,7 @@ import useConversations from '../../hooks/useConversations';
 import useChatRequests from '../../hooks/useChatRequests';
 import useUser from '../../hooks/useUser';
 import RequestItem from './RequestItem';
+import CreateGroupButton from './CreateGroupButton';
 
 const Sidebar: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
@@ -36,7 +37,7 @@ const Sidebar: React.FC = () => {
   const handleSendRequest = () => {
     const to = receiverUsername.trim();
     if (to && user.username && to !== user.username) {
-      createJoinRequest(user.username, to);
+      createJoinRequest(user.username, to, 'private');
       setReceiverUsername('');
     }
   };
@@ -121,6 +122,7 @@ const Sidebar: React.FC = () => {
       </Tabs>
 
       <Box sx={{ flexGrow: 1, overflow: 'auto', mt: 1 }}>
+        <CreateGroupButton />
         {tabValue === 0 && (
           <List sx={{ p: 0 }}>
             {conversations.length === 0 ? (

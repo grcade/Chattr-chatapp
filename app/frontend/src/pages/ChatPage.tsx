@@ -29,11 +29,28 @@ const ChatPage: React.FC = () => {
     );
 
     acceptedRequests.forEach((req) => {
-      // Determine the username of the other participant
-      const otherUser = req.from === user.username ? req.to : req.from;
+      if (req.type === 'group') {
+        const groupLabel = req.groupName?.trim() || 'Group chat';
 
-      if (otherUser && otherUser !== user.username) {
-        addConversation(otherUser, req.conversationId ?? req.privateChatId);
+        if (req.conversationId) {
+          addConversation(groupLabel, req.conversationId);
+        }
+
+        return;
+      }
+
+      // Determine the username of the other participant
+      const otherUser: string | string[] =
+        req.from === user.username ? req.to : req.from;
+      const privateChatUser: string | null = Array.isArray(otherUser)
+        ? null
+        : otherUser;
+
+      if (privateChatUser && privateChatUser !== user.username) {
+        addConversation(
+          privateChatUser,
+          req.conversationId ?? req.privateChatId
+        );
       }
     });
   }, [user.username, sent, inbox, addConversation]);

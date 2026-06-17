@@ -20,6 +20,14 @@ interface RequestItemProps {
   type: 'inbox' | 'sent';
 }
 
+const formatRequestTarget = (target: string | string[]): string =>
+  Array.isArray(target) ? target.join(', ') : target;
+
+const getAvatarLabel = (value: string | string[]) => {
+  const normalized = Array.isArray(value) ? value.join(', ') : value;
+  return normalized.slice(0, 1).toUpperCase() || '?';
+};
+
 const RequestItem: React.FC<RequestItemProps> = ({ request, type }) => {
   const { acceptRequest, rejectRequest } = useChatRequests();
 
@@ -36,7 +44,19 @@ const RequestItem: React.FC<RequestItemProps> = ({ request, type }) => {
     }
   };
 
-  const username = type === 'inbox' ? request.from : request.to;
+  const username: string =
+    request.type === 'group'
+      ? request.groupName?.trim() || 'Group chat'
+      : type === 'inbox'
+        ? String(request.from)
+        : formatRequestTarget(request.to);
+  const avatarLabel = getAvatarLabel(
+    request.type === 'group'
+      ? request.groupName?.trim() || request.from
+      : type === 'inbox'
+        ? request.from
+        : request.to
+  );
 
   return (
     <ListItem
@@ -58,7 +78,7 @@ const RequestItem: React.FC<RequestItemProps> = ({ request, type }) => {
           fontWeight: 600,
         }}
       >
-        {username.charAt(0).toUpperCase()}
+        {avatarLabel}
       </Avatar>
       <ListItemText
         primary={

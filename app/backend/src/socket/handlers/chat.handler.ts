@@ -19,119 +19,168 @@ import {
 } from '../../services/chat.service';
 import { isValidUUID } from '../utils/isValiduuid';
 
+type ChatJoinRequestPayload = {
+  id: string;
+  from: string;
+  to: string | string[];
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: number;
+  updatedAt: number;
+  conversationId?: string;
+  privateChatId?: string;
+  type?: conversation_type;
+};
+
 const registerChatHandlers = (io: Server, socket: Socket) => {
-  socket.on('chat:request', async (req) => {
-    // console.log('Received request: ', req);
-    // Here you can handle the incoming chat join request forward it to the intended recipient
-
+  socket.on('chat:request', async (req: ChatJoinRequestPayload) => {
     if (!socket.handshake.auth.username) {
       throw new Error('Unauthenticated socket connection');
     }
-    const recipientSocket = onlineUsers.get(req.to);
-    // console.log(
-    //   'Recipient socket id: ',
-    //   recipientSocket,
-    //   ' for recipient: ',
-    //   req.to
-    // );
-    if (recipientSocket) {
-      const convoResult = await createConversationService(
-        'private' as conversation_type
-      );
-      if (!convoResult) {
-        console.error('Failed to create conversation for users: ', req.to);
-        socket.emit('chat:error', { message: 'Failed to create conversation' });
-        return;
-      }
 
-      // createConversationService may return an array or a single Conversation
-      const conversation: any = Array.isArray(convoResult)
-        ? convoResult[0]
-        : (convoResult as Conversation);
+    const recipientUsernames = Array.isArray(req.to) ? req.to : [req.to];
+    const recipientSockets = recipientUsernames.map((username) =>
+      onlineUsers.get(username)
+    );
 
-      if (!conversation || !conversation.id) {
-        console.error('Invalid conversation object returned: ', conversation);
-        socket.emit('chat:error', { message: 'Invalid conversation data' });
-        return;
-      }
-      await addUserToConversationService(conversation.id, socket.data.userId); // Add the requester to the conversation
-      req.conversationId = conversation.id; // Attach the conversation ID to the request object
-      req.privateChatId = conversation.id;
-
-      io.to(recipientSocket).emit('chat:request', req);
-      // console.log('Forwarded request to recipient: ', req.to);
-    } else {
-      // console.log('Recipient not connected: ', req.to);
-    }
-  });
-
-  socket.on('chat:response', async (res) => {
-    // console.log('Received response: ', res);
-    // here you can handle the resposne accept or reject based on that join the private chat room and send the response back to the requester
-    if (!socket.handshake.auth.username) {
-      throw new Error('Unauthenticated socket connection');
-    }
-    const requesterSocket = onlineUsers.get(res.from);
-    if (!requesterSocket) {
-      // console.log('Requester not connected: ', res.from);
-      socket.emit('chat:error ', { message: 'Requester is not connected' });
+    if (recipientSockets.length === 0) {
       return;
     }
 
-    if (res.status === 'accepted') {
-      const requestId = res.id;
-      const conversationId = res.conversationId;
+    const convoResult = await createConversationService(
+      (req.type ?? 'private') as conversation_type
+    );
+    console.log('Conversation creation result: ', convoResult);
+    if (!convoResult) {
+      console.error('Failed to create conversation for users: ', req.to);
+      socket.emit('chat:error', { message: 'Failed to create conversation' });
+      return;
+    }
 
-      if (!conversationId) {
-        console.error('No conversation ID provided in response: ', res);
-        socket.emit('chat:error', { message: 'Conversation ID is required' });
+    const conversation: any = Array.isArray(convoResult)
+      ? convoResult[0]
+      : (convoResult as Conversation);
+
+    if (!conversation || !conversation.id) {
+      console.error('Invalid conversation object returned: ', conversation);
+      socket.emit('chat:error', { message: 'Invalid conversation data' });
+      return;
+    }
+
+    await addUserToConversationService(conversation.id, socket.data.userId);
+    req.conversationId = conversation.id;
+    req.privateChatId = conversation.id;
+
+    recipientSockets.forEach((recipientSocket) => {
+      if (!recipientSocket) return;
+      io.to(recipientSocket).emit('chat:request', req);
+    });
+  });
+
+  socket.on('chat:response', async (res: ChatJoinRequestPayload) => {
+    try {
+      if (!socket.handshake.auth.username) {
+        throw new Error('Unauthenticated socket connection');
+      }
+
+      const requesterSocket = onlineUsers.get(res.from);
+
+        console.log('Chat response received: ', res, socket.data.username);
+
+      if (!requesterSocket) {
+        socket.emit('chat:error', {
+          message: 'Requester is not connected',
+        });
         return;
       }
 
-      // Join the private chat room
-      //on accept just tuen on is_active
+      if (res.status === 'accepted') {
+        const conversationId = res.conversationId;
 
-      socket.join(conversationId); // Join the recipient to the same private chat room
+        if (!conversationId) {
+          socket.emit('chat:error', {
+            message: 'Conversation ID is required',
+          });
+          return;
+        }
 
-      io.in(requesterSocket).socketsJoin(conversationId); // Join the requester to the same private chat room
-      // have to find id of which user is recipent and then pass it to `addUserToConversationService` to add that user to the conversation
-      // console.log('---res---', res);
-      // console.log('---conversation---', conversationId);
-      // console.log('---socket.data.userId---', socket.data);
+        const requestId = res.id;
 
-      //   const recipientUser: any = await searchUsersService(res.from);
-      //   if (!recipientUser || recipientUser.length === 0) {
-      //     console.error('Recipient user not found: ', res.to);
-      //     socket.emit('chat:error', { message: 'Recipient user not found' });
-      //     return;
-      //   }
-      //   console.log('---recipientUser---', recipientUser);
-      await addUserToConversationService(conversationId, socket.data.userId);
-      await toggleConversationActiveStatusService(conversationId, true);
+        // Add accepter socket to room
+        socket.join(conversationId);
 
-      res.conversationId = conversationId;
-      res.privateChatId = conversationId;
-      res.id = requestId;
+        // Add requester socket to room
+        io.in(requesterSocket).socketsJoin(conversationId);
 
-      // console.log(
-      //   `Both users joined private chat room: ${conversationId} for users: ${res.from} and ${res.to}`
-      // );
+        // Add accepter to DB conversation members
+        await addUserToConversationService(conversationId, socket.data.userId);
+
+        // Handle all invited users
+        const recipients = Array.isArray(res.to) ? res.to : [res.to];
+
+        await Promise.all(
+          recipients.map(async (username) => {
+            try {
+              const users = await searchUsersService(username);
+              const user = Array.isArray(users) ? users[0] : users;
+
+              if (!user?.id) {
+                console.warn(
+                  `User not found while adding to conversation: ${username}`
+                );
+                return;
+              }
+              console.log(
+                username,
+                conversationId,
+                'Adding user to conversation'
+              );
+              await addUserToConversationService(conversationId, user.id);
+
+              const recipientSocket = onlineUsers.get(username);
+
+              if (recipientSocket) {
+                io.in(recipientSocket).socketsJoin(conversationId);
+              }
+            } catch (err) {
+              console.error(`Failed adding ${username} to conversation`, err);
+            }
+          })
+        );
+
+        await toggleConversationActiveStatusService(conversationId, true);
+
+        res.id = requestId;
+        res.privateChatId = conversationId;
+        res.conversationId = conversationId;
+      }
+
+      if (res.status === 'rejected' && res.conversationId) {
+        await deleteConversationService(res.conversationId);
+      }
+
+      // Notify requester
+      io.to(requesterSocket).emit('chat:response', res);
+
+      // Notify current responder
+      socket.emit('chat:response', res);
+
+      // Notify all recipients (for group chats)
+      const recipients = Array.isArray(res.to) ? res.to : [res.to];
+
+      recipients.forEach((username) => {
+        const recipientSocket = onlineUsers.get(username);
+
+        if (recipientSocket) {
+          io.to(recipientSocket).emit('chat:response', res);
+        }
+      });
+    } catch (error) {
+      console.error('chat:response error:', error);
+
+      socket.emit('chat:error', {
+        message: 'Failed to process chat response',
+      });
     }
-
-    //on reject delete the conversation if created
-    // console.log(
-    //   'this is the res object in chat:response handler---------------><',
-    //   res
-    // );
-    if (res.status === 'rejected' && res.conversationId) {
-      await deleteConversationService(res.conversationId);
-      // console.log(
-      //   `Conversation ${res.conversationId} deleted due to rejection by recipient: ${res.to}`
-      // );
-    }
-
-    io.to(requesterSocket).emit('chat:response', res);
-    socket.emit('chat:response', res);
   });
 
   socket.on('chat:join', async (data: { conversationId: string }) => {
@@ -174,13 +223,9 @@ const registerChatHandlers = (io: Server, socket: Socket) => {
         });
         return;
       }
-      console.log('content----------->', content);
-      const image_url: string | null = data.imageUrl
-        ? data.imageUrl.trim()
-        : null;
-      //   console.log('nickkka', socket.data.userId); //indeed an uuid
-      console.log('conversationId----------->', conversationId);
-      console.log('user id----------->', socket.data.userId);
+
+      const image_url: string | null = imageUrl ? imageUrl.trim() : null;
+
       const chatResult = await createChatService(
         content,
         socket.data.username,
@@ -220,7 +265,6 @@ const registerChatHandlers = (io: Server, socket: Socket) => {
     }
 
     const chats = await getChatsByConversationIdService(conversationId);
-    console.log('chats----------->', chats);
     socket.emit('chat:history-response', {
       conversationId,
       chats: chats ?? [],

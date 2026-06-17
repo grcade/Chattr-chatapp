@@ -6,6 +6,7 @@ import {
   setInboxRequestStatus,
   type ChatJoinRequest,
   type ChatJoinResponse,
+  type conversation_type,
 } from '../store/features/chatRequestsSlice';
 import {
   emitChatRequest,
@@ -20,7 +21,12 @@ export const useChatRequests = () => {
   const inbox = useAppSelector((s) => s.chatRequests.inbox);
 
   const createJoinRequest = useCallback(
-    (from: string, to: string) => {
+    (
+      from: string,
+      to: string | string[],
+      type: conversation_type,
+      groupName?: string
+    ) => {
       const now = Date.now();
 
       const request: ChatJoinRequest = {
@@ -30,6 +36,8 @@ export const useChatRequests = () => {
         status: 'pending',
         createdAt: now,
         updatedAt: now,
+        type,
+        groupName,
       };
 
       dispatch(sendJoinRequest(request));

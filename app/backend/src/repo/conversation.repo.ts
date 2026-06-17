@@ -7,7 +7,6 @@ import {
 } from '../db/schema/index.js';
 import type { conversation_type } from '@app/shared/types/user.types';
 
-
 export const create_conversation = (id: string, type: conversation_type) => {
   return db
     .insert(conversations)
@@ -44,6 +43,7 @@ export const create_user_conversation = (
       conversation_id: conversationId,
       user_id: userId,
     })
+    .onConflictDoNothing()
     .returning();
 };
 

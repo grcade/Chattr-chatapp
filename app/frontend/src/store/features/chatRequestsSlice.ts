@@ -2,16 +2,19 @@ import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
 export type JoinRequestStatus = 'pending' | 'accepted' | 'rejected';
+export type conversation_type = 'private' | 'group';
 
 export interface ChatJoinRequest {
   id: string;
   from: string;
-  to: string;
+  to: string | string[]; // for group chats, this can be an array of user IDs
   status: JoinRequestStatus;
   createdAt: number;
   updatedAt: number;
   conversationId?: string;
   privateChatId?: string;
+  type?: conversation_type;
+  groupName?: string;
 }
 
 export type ChatJoinResponse = ChatJoinRequest & {
